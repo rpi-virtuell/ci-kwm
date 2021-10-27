@@ -1,2 +1,3 @@
 # kwm
- Formulareintrag zur Tagesordnung in Beitrag schreiben
+ Formulareintrag mit Vorschlag zur Tagesordnung in Beitrag einfügen
+![img.png](img.png)
