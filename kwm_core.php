@@ -22,9 +22,40 @@ class KwmCore {
 		add_action('admin_head',array($this,'editor_style'));
 		add_action( 'wp_enqueue_scripts', array($this,'enqueue'));
 		add_action( 'enqueue_block_assets',array( $this,'enqueue') );
+		add_action( 'blocksy:hero:after',array( $this,'form_button') );
 		add_filter( 'gform_rich_text_editor_buttons', array( $this,'formular_editor_toolbar'), 10, 2 );
 		add_filter( 'default_content', array( $this,'tagesordnung_template'), 10, 2 );
+		add_filter( 'default_title', array( $this,'tagesordnung_title'), 10, 2 );
+		add_filter( 'pre_option_default_category', array( $this,'get_default_category'), 10 );
+		add_action( 'wp_insert_post', array( $this,'draft_category'), 10 ,2);
+	}
 
+	public function form_button(){
+
+		global $post;
+
+		if($post->post_type == 'post'){
+			?>
+			<!-- wp:buttons {"contentJustification":"right"} -->
+			<div class="wp-block-buttons is-content-justification-right"><!-- wp:button -->
+				<div class="wp-block-button"><a class="wp-block-button__link" href="https://test.rpi-virtuell.de/beitrag-zur-kwm/?post_id=<?php echo $post->ID;?>">Top einreichen</a></div>
+				<!-- /wp:button --></div>
+			<!-- /wp:buttons -->
+		<?php
+		}
+
+	}
+
+	public function tagesordnung_title($title, $post){
+		switch( $post->post_type ) {
+			case 'post':
+				date_default_timezone_set('Europe/Berlin');
+				setlocale(LC_ALL, 'de_DE.utf8');
+				$title = 'Tagesordnung ... '. date('F Y',strtotime("+0 month"));
+				break;
+
+		}
+		return $title;
 	}
 	public function tagesordnung_template($content, $post){
 		switch( $post->post_type ) {
@@ -32,6 +63,7 @@ class KwmCore {
 				$args = array(
 					'name'        => 'vorlage-tagesorgnung',
 					'post_type'   => 'post',
+					'post_status'   => 'draft',
 					'numberposts' => 1
 				);
 				$posts = get_posts($args);
@@ -336,7 +368,7 @@ class KwmCore {
 		$updated_post_content ='';
 
 		$doc = new DOMDocument();
-		$doc->loadHTML($content);
+		$doc->loadHTML('<?xml encoding="utf-8" ?>'.$content);
 
 		function showDOMNode(DOMNode $domNode,&$updated_post_content) {
 			foreach ($domNode->childNodes as $node)
@@ -428,6 +460,23 @@ class KwmCore {
 
 	public function render_content_block($block){
 		return apply_filters( 'the_content', render_block( $block ) );
+	}
+
+	function get_default_category()
+	{
+		if ( ! isset( $_GET['post_cat'] ) )
+			return FALSE;
+
+		return array_map( 'sanitize_title', explode( ',', $_GET['post_cat'] ) );
+	}
+	function draft_category( $post_ID, $post )
+	{
+		if ( ! $cat = $this->get_default_category()
+		     or 'auto-draft' !== $post->post_status )
+			return;
+
+		// return value will be used in unit tests only.
+		return wp_set_object_terms( $post_ID, $cat, 'category' );
 	}
 }
 
