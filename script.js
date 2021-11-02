@@ -25,6 +25,13 @@ function tagesordnungspunkteNummerieren(){
 }
 tagesordnungspunkteNummerieren();
 if(typeof wp != 'undefined'){
+    wp.data.select("core/editor").getBlocks().forEach(function(block, blockIndex){
+    if (block.name === "core/freeform"){
+        wp.data.dispatch( 'core/editor' ).replaceBlocks(block.clientId, wp.blocks.rawHandler(
+            { HTML: wp.blocks.getBlockContent( block ) }
+        ));
+    }});
+
     wp.hooks.addFilter(
         'blocks.getSaveContent.extraProps',
         'kwm/heading-numbers',

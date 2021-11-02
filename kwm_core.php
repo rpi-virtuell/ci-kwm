@@ -22,8 +22,31 @@ class KwmCore {
 		add_action('admin_head',array($this,'editor_style'));
 		add_action( 'wp_enqueue_scripts', array($this,'enqueue'));
 		add_action( 'enqueue_block_assets',array( $this,'enqueue') );
+		add_filter( 'gform_rich_text_editor_buttons', array( $this,'formular_editor_toolbar'), 10, 2 );
+		add_filter( 'default_content', array( $this,'tagesordnung_template'), 10, 2 );
 
 	}
+	public function tagesordnung_template($content, $post){
+		switch( $post->post_type ) {
+			case 'post':
+				$args = array(
+					'name'        => 'vorlage-tagesorgnung',
+					'post_type'   => 'post',
+					'numberposts' => 1
+				);
+				$posts = get_posts($args);
+				$content = $posts[0]->post_content;
+				break;
+
+		}
+		return $content;
+	}
+
+	public function formular_editor_toolbar(){
+		$mce_buttons= array( 'bold', 'italic', 'bullist', 'numlist','link', 'unlink' );
+		return $mce_buttons;
+	}
+
 	public function editor_style(){
 		echo '<style id="lazy_blocks_handle">
 			.lazyblock .lzb-content-title {display: none;}
@@ -78,7 +101,7 @@ class KwmCore {
 			}
 			.kwmtop.openspace:before {
 			    content: "Open Space";
-			    background: #ffa52e;
+			    background: #DCFFCC;
 			}
 			.kwmtop.teambuilding:before {
 			    content: "Spaß / Spiel / Action";
@@ -99,7 +122,7 @@ class KwmCore {
 	}
 	public function on_form_submission($entry, $form){
 
-		if($form["id"]>3){
+		if($form["id"]<>3){
 			return;
 		}
 
@@ -108,7 +131,7 @@ class KwmCore {
 
 		$to_post_id                 = rgar($entry,'15');
 		$title                      = rgar($entry,'1');
-		$content                    = rgar($entry,'2');
+		$content                    = rgar($entry,'17');
 		$section                    = rgar($entry,'10');
 		$toptype['info']            = rgar($entry,'5.1');
 		$toptype['feedback']        = rgar($entry,'5.2');
@@ -129,41 +152,63 @@ class KwmCore {
 			$toptype=array('openspace'=>'openspace');
 			$is_openspace = true;
 		}
-
+		$content = wpautop( $content, true);
+		//$content = '<!-- wp:freeform -->'.$content.'<!--/wp:freeform -->';
+		$content = $this->parse_html($content);
 
 		$icon_dir_url = plugin_dir_url(__FILE__).'icons/';
 
 		if($is_openspace){
 
-			$phase2_pattern = '#<!-- wp:column \{"className":"openspace-group-phase2"\} -->(.*)<!-- \/wp:column -->\W*<\/div>\W*<!-- \/wp:columns --><\/div>\W*<!-- \/wp:group -->#Us';
 			$phase1_pattern = '#<!-- wp:column \{"className":"openspace-group-phase1"\} -->(.*)<!-- \/wp:column -->\W*<!-- wp:column {"className":"openspace-group-phase2"} -->#Us';
-
-
-			preg_match_all($phase1_pattern,$to_post->post_content,$matches);
+			$phase2_pattern = '#<!-- wp:column \{"className":"openspace-group-phase2"\} -->(.*)<!-- \/wp:column -->\W*<\/div>\W*<!-- \/wp:columns --><\/div>\W*<!-- \/wp:group -->#Us';
 
 			$phase1count = $phase2count = 0;
+			$phase_1 = false;
+			$phase_2 = false;
 
+			preg_match_all($phase1_pattern,$to_post->post_content,$matches);
 			if($matches && isset($matches[1][0])){
 				$phase1count = preg_match_all('#<!-- wp:group#Us',$matches[1][0]);
+				$phase_1 = true;
 			}
 
 			preg_match_all($phase2_pattern,$to_post->post_content,$matches);
 			if($matches && isset($matches[1][0])){
 				$phase2count = preg_match_all('#<!-- wp:group#Us',$matches[1][0]);
+				$phase_2 = true;
 			}
 
-			$phase = ($phase1count>$phase2count)?'phase2':'phase1';
+
+
+
+
 
 			$template = file_get_contents(dirname(__FILE__).'/session.html');
+
+			$this->add_attachments($content,$files,$nachgereicht);
 
 			//replace placeholders
 			$template = str_replace('{{title}}',$title,$template);
 			$template = str_replace('{{content}}',$content,$template);
 			$template = str_replace('{{responsible}}',$responsible,$template);
 
-			$search_pattern = '#(<!-- wp:paragraph {"className":"openspace-'.$phase.'"} -->.*<!-- \/wp:paragraph -->)#sU';
-			$replace = '$1'.$template;
+			if($phase_1 && $phase_2){
+				$phase = ($phase1count > $phase2count)?'phase2':'phase1';
+			}elseif ($phase_1){
+				$phase= 'phase1';
+			}elseif ($phase_2){
+				$phase= 'phase2';
+			}else{
+				$phase = false;
+			}
 
+			if($phase !== false){
+				$search_pattern = '#(<!-- wp:paragraph {"className":"openspace-'.$phase.'"} -->.*<!-- \/wp:paragraph -->)#sU';
+			}else{
+				$search_pattern = '#(<!-- wp:group {"className":"openspace-group"} -->.*<!-- wp:column {"className":"openspace-group-phase\d"} -->\W*<div class="wp-block-column openspace-group-phase\d">[^<]*)#sU';
+			}
+			$replace = '$1'.$template;
 			$to_post->post_content = preg_replace($search_pattern,$replace,$to_post->post_content);
 
 		}else{
@@ -182,19 +227,8 @@ class KwmCore {
 				}
 			}
 
-			//generate links to uploaded files
-			$attch =array();
-			if(count($files)<1){
-				$attch[] = array('label'=>$nachgereicht,'url'=>false);
-			}else{
-				foreach ($files as $file){
-					$attch[] = array(
-						'label'=>substr(strrchr($file,'/'),1),
-						'url'=>$file,
-					);
-				}
-			}
 
+			/*
 			//generate paragraph blocks from shortdescription lines
 			$pattern = '<!-- wp:paragraph -->
             <p>%s</p>
@@ -205,17 +239,11 @@ class KwmCore {
 				if(!empty(trim($p)))
 					$block_contents[]= sprintf($pattern,trim($p));
 			}
-			$content = implode("\n", $block_contents);
 
-			//generate a list of attachment links
-			$attachments = '';
-			if(count($attch)>0){
-				$attach_pattern = '<li><a href="%s" target="_blank">%s</a></li>';
-				foreach ($attch as $att){
-					$attachments .= sprintf($attach_pattern,$att['url'],$att['label']);
-				}
-				$content .= "\n".'<!-- wp:list -->'."\n".'<ul>'.$attachments.'</ul>'."\n".'<!-- /wp:list -->';
-			}
+			$content = implode("\n", $block_contents);
+			*/
+
+			$this->add_attachments($content,$files,$nachgereicht);
 
 			//get the block template
 			$template = file_get_contents(dirname(__FILE__).'/block.html');
@@ -242,6 +270,120 @@ class KwmCore {
 
 
 	}
+
+	private function add_attachments(&$content,$files,$nachgereicht){
+		//generate links to uploaded files
+		$attch =array();
+		if(count($files)<1 && !empty($nachgereicht)){
+			$attch[] = array('label'=>$nachgereicht,'url'=>false);
+		}else{
+			foreach ($files as $file){
+				$attch[] = array(
+					'label'=>substr(strrchr($file,'/'),1),
+					'url'=>$file,
+				);
+			}
+		}
+
+		//generate a list of attachment links
+		$attachments = '';
+		if(count($attch)>0){
+			$attach_pattern = '<li><a href="%s" target="_blank">%s</a></li>';
+			foreach ($attch as $att){
+				$attachments .= sprintf($attach_pattern,$att['url'],$att['label']);
+			}
+			$content .= "\n".'<!-- wp:list -->'."\n".'<ul>'.$attachments.'</ul>'."\n".'<!-- /wp:list -->';
+		}
+	}
+
+	/**
+	 * Serializes a block.
+	 *
+	 * @param array $block Block object.
+	 * @return string String representing the block.
+	 */
+	function serialize_block( $block ) {
+		if ( ! isset( $block['blockName'] ) ) {
+			return false;
+		}
+		$name = $block['blockName'];
+		if ( 0 === strpos( $name, 'core/' ) ) {
+			$name = substr( $name, strlen( 'core/' ) );
+		}
+		if ( empty( $block['attrs'] ) ) {
+			$opening_tag_suffix = '';
+		} else {
+			$opening_tag_suffix = ' ' . json_encode( $block['attrs'] );
+		}
+		if ( empty( $block['innerHTML'] ) ) {
+			return sprintf(
+				'<!-- wp:%s%s /-->',
+				$name,
+				$opening_tag_suffix
+			);
+		} else {
+			return sprintf(
+				'<!-- wp:%1$s%2$s -->%3$s<!-- /wp:%1$s -->',
+				$name,
+				$opening_tag_suffix,
+				$block['innerHTML']
+			);
+		}
+	}
+
+	public function parse_html($content){
+
+		$updated_post_content ='';
+
+		$doc = new DOMDocument();
+		$doc->loadHTML($content);
+
+		function showDOMNode(DOMNode $domNode,&$updated_post_content) {
+			foreach ($domNode->childNodes as $node)
+			{
+				if(in_array($node->nodeName,array('p','ul' ))){
+					//var_dump('<pre>',$node->nodeName,htmlentities($domNode->ownerDocument->saveHTML($node)),'</pre>');
+					$new_content = $domNode->ownerDocument->saveHTML($node);
+
+					$blockName = '';
+					switch($node->nodeName){
+						case 'p':
+							$blockName    = 'core/paragraph';
+							break;
+						case 'ul':
+						case 'ol':
+							$blockName    = 'core/list';
+							break;
+					}
+					if(!empty($blockName)){
+						$new_block = array(
+							// We keep this the same.
+							'blockName'    => $blockName,
+							// also add the class as block attributes.
+							'attrs'        => array( 'className' => 'kwm-rt' ),
+							// I'm guessing this will come into play with group/columns, not sure.
+							'innerBlocks'  => array(),
+							// The actual content.
+							'innerHTML'    => $new_content,
+							// Like innerBlocks, I guess this will is used for groups/columns.
+							'innerContent' => array( $new_content ),
+						);
+						$updated_post_content .= serialize_block($new_block);
+					}
+
+
+				}elseif ($node->hasChildNodes()) {
+					showDOMNode($node,$updated_post_content);
+				}
+			}
+		}
+		showDOMNode($doc,$updated_post_content);
+
+		// return the content.
+		return $updated_post_content;
+
+	}
+
 	public function get_block_from_form_entry(){
 
 		if(!is_user_logged_in()){
