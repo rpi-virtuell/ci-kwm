@@ -1,27 +1,37 @@
 
 function tagesordnungspunkteNummerieren(){
 
-    let n2 = 0,n3 = 0,n4 = 0;
-    let hs = document.querySelectorAll('h2, h3, h4');
-    for(const h of hs){
-
-        if(h.tagName == 'H2'){
-            n3=0;
-            n2++;
-            h.setAttribute('data-before',n2+' ');
-        }
-        if(h.tagName == 'H3'){
-            n4=0;
-            n3++;
-            h.setAttribute('data-before',n2+'.'+n3+' ');
-        }
-        if(h.tagName == 'H4'){
-            n4++;
-            h.setAttribute('data-before',n2+'.'+n3+'.'+n4+' ');
-        }
+    clearInterval(window._interval_tagesordnungspunkteNummerieren);
 
 
-    }
+    window._interval_tagesordnungspunkteNummerieren =  setInterval(function(){
+
+        let n2 = 0,n3 = 0,n4 = 0;
+        let hs = document.querySelectorAll('h2, h3, h4');
+        for(const h of hs){
+
+            if(h.tagName == 'H2'){
+                n3=0;
+                n2++;
+                h.setAttribute('data-before',n2+' ');
+            }
+            if(h.tagName == 'H3'){
+                n4=0;
+                n3++;
+                h.setAttribute('data-before',n2+'.'+n3+' ');
+            }
+            if(h.tagName == 'H4'){
+                n4++;
+                h.setAttribute('data-before',n2+'.'+n3+'.'+n4+' ');
+            }
+
+
+        }
+
+    },1000);
+
+
+
 }
 tagesordnungspunkteNummerieren();
 if(typeof wp != 'undefined'){

@@ -1,4 +1,4 @@
-.kwmtop {margin-bottom:10px!important;border-radius:  8px; position: relative;}
+.kwmtop {margin-bottom:10px!important; position: relative;}
 .kwmtop .kwmicon {position:absolute; right: auto;padding: 0; margin: 0;}
 .kwmtop h2,.kwmtop h3,.kwmtop h4 {padding: 0!important; margin: 0!important;}
 .kwmtop h2 {font-size: 1.5em!important; }
@@ -15,6 +15,44 @@
 .kwmtop .wp-block-columns{margin-bottom: 0!important;}
 .kwmtop figure{float:right;width: 50%;}
 .kwmtop figcaption{display: none!important;}
+.kwmtop .align-right{float:right;}
+
+.block-editor-block-list__block.trenner::before {
+
+    width: 52%;
+    display: block;
+    position: absolute;
+    z-index: 10;
+    background: transparent;
+    height: 100%;
+    content: " ";
+    visibility: visible;
+    border: 0;
+    box-shadow: none;
+    border-radius: initial;
+
+}
+.trenner p {
+    padding: 0 !important;
+    margin: 0 auto !important;
+    line-height: 1.2em;
+}
+.block-editor-block-list__block.openspace-group::before {
+
+    width: 100%;
+    display: block;
+    position: absolute;
+    z-index: 10;
+    background: transparent;
+    height: 80px;
+    content: " ";
+    visibility: visible;
+    border: 0;
+    box-shadow: none;
+    border-radius: initial;
+
+}
+
 
 .wp-block-group.openspace-group .wp-block-columns {
     margin: 0;
@@ -24,12 +62,20 @@
     margin: 0;
     width: min(calc(100% - 0px), 100%) !important;
 }
+.openspace-group {
+    background-color: #fff;
+    D
+}
+
 .openspace-group .wp-block-group{
     margin-bottom: 10px;
     border-radius: 10px;
+    position: relative;
 }
 .openspace-group .wp-block-columns {
     margin-top: 10px !important;
+    border-bottom: 1px  solid #999999;
+    padding-bottom:10px;
 }
 .openspace-group .wp-block-group p{
     line-height: 1em;
@@ -42,7 +88,77 @@
     font-style: italic;
     margin-top: -15px!important;
 }
-.openspace-group .wp-block-group h3{
+.openspace-group .wp-block-group h3, .openspace-session h3{
     margin: 0 auto;
     padding: 0;
+}
+.openspace-session,.openspace-group  .wp-block-column>p{
+    background-color: #eee;
+    position: static;
+    padding: 5px 10px;
+    border-bottom: 1px  solid #999999;
+    display: block;
+    border-radius: 5px;
+}
+.kwmtop, .openspace-session, .openspace-group  .wp-block-group {
+    box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #999999;
+    border-radius: 5px;
+}
+.openspace-group .button {
+    background-color: #DCFFCC;
+    float: right;
+    padding: 0px 8px 8px;
+    font-size: xx-large;
+    z-index: 10;
+    color: darkcyan;
+    line-height: 10px;
+    margin-right: -25px;
+    top: -21px;
+    box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border: 1px solid #999;
+
+}
+.openspace-group .button:hover{
+    margin-top: 5px;
+    background-color: #DCFFCC;
+    color: #000000;
+    margin-right: -30px;
+    box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.1);
+}
+.openspace-group .session-toolbar span{
+    margin-top: -15px;
+    margin-left: 5px;
+}
+
+.openspace-group .dashicons {
+    float: right;
+
+}
+.openspace-group .dashicons-remove {
+    color:red;
+}
+.session-tn {
+    margin-left: -10px;
+    font-size: 13px;
+    line-height: 15px;
+    margin-top: 10px;
+}
+.category-protokoll h1, .category-protokoll h2,.category-protokoll h3,.category-protokoll h4{
+    color: #699;
+}
+.category-protokoll h2 {
+    --fontSize:26px;
+}
+
+.category-protokoll .kwmtop{
+    background-color: lightyellow!important;
+}
+
+.add-top-btn a {
+    background-color: #666 !important;
+}
+.add-top-btn a:hover {
+    background-color: blueviolet !important;
 }

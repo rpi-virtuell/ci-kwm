@@ -1,5 +1,5 @@
-<!-- wp:group {"style":{"color":{"background":"#dcffcc"}}} -->
-<div class="wp-block-group has-background" style="background-color:#dcffcc"><!-- wp:paragraph -->
+<!-- wp:group {"style":{"color":{"background":"#dcffcc"}},"className":"openspace-session"} -->
+<div class="wp-block-group openspace-session has-background" style="background-color:#dcffcc"><!-- wp:paragraph -->
     <p>{{responsible}}</p>
     <!-- /wp:paragraph -->
 
@@ -8,6 +8,15 @@
     <!-- /wp:heading -->
 
     {{content}}
-
+    <!-- wp:paragraph {"className":"hidden entry_id"} -->
+    <p class="hidden entry_id">{{id}}</p>
+    <!-- /wp:paragraph -->
+    <!-- wp:paragraph {"className":"hidden votes"} -->
+    <p class="hidden votes"></p>
+    <!-- /wp:paragraph -->
+    <!-- wp:paragraph {"className":"session-toolbar"} -->
+    <p class="session-toolbar" id="{{id}}"><a class="session-pad" href="https://pad.rpi-virtuell.de/p/{{hash}}" target="_blank">Ergebnisse</a></p>
+    <!-- /wp:paragraph -->
 </div>
 <!-- /wp:group -->
+
