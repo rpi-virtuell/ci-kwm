@@ -270,7 +270,7 @@ class KwmCore {
                 return;
             }
 
-            if(get_post_meta($post->ID,'kwm_datum', true)>= date('Ymd',strtotime('today'))){
+            if(get_post_meta($post->ID,'kwm_datum', true)<= date('Ymd',strtotime('today'))){
 				?>
                 <!-- wp:buttons {"contentJustification":"right"} -->
                 <div class="wp-block-buttons is-content-justification-right"><!-- wp:button {"className":"add-top-btn"} -->
@@ -415,7 +415,7 @@ class KwmCore {
 			    background: #e83781;
 			}
 			.kwmtop.berichte:before {
-			    content: "Projekte / Vorhaben und Berichte";
+			    content: "Projekte, Vorhaben und Berichte";
 			    background: #1b8a9b;
 			}
 			.kwmtop.organisationsentwicklung:before {
@@ -503,6 +503,7 @@ class KwmCore {
 
     public function enqueue(){
 		wp_enqueue_style( 'kwmtop-style', plugin_dir_url(__FILE__).'style.css' );
+		wp_enqueue_style( 'old-kwm-styles', plugin_dir_url(__FILE__).'old_styles.css' );
         //Überschriften nummeriren
         if($this->is_tagesordnung(null,true)){
 	        wp_enqueue_script( 'kwmtop-script', plugin_dir_url(__FILE__).'/script.js', array(), '1.0.0', true );
