@@ -326,16 +326,10 @@ class KwmCore {
     public function tagesordnung_template($content, $post){
 		switch( $post->post_type ) {
 			case 'post':
-				$args = array(
-					'name'        => 'vorlage-tagesorgnung',
-					'post_type'   => 'post',
-					'post_status' => array('publish', 'pending', 'draft'),
-					'numberposts' => 1
-				);
-				$posts = get_posts($args);
-				$content = $posts[0]->post_content;
 
-				$tag1 = $_GET['tag1'];
+				$content = file_get_contents(dirname(__FILE__).'/to-template.html');
+
+                $tag1 = $_GET['tag1'];
 				$tag2 = $_GET['tag2'];
 
 
@@ -357,6 +351,15 @@ class KwmCore {
                 $content = str_replace('{{Tag 2}}',$tag2,$content);
                 $content = str_replace('{{Moderation}}',$moderation,$content);
                 $content = str_replace('{{zoom}}',$zoom,$content);
+
+
+				$icon_dir_url = plugin_dir_url(__FILE__).'icons/';
+
+				$content = str_replace('{{info.svg}}',$icon_dir_url.'info.svg',$content);
+				$content = str_replace('{{pause}}',$icon_dir_url.'tea-time.png',$content);
+				$content = str_replace('{{fun}}',$icon_dir_url.'fun.svg',$content);
+				$content = str_replace('{{fun.png}}',$icon_dir_url.'fun.png',$content);
+				$content = str_replace('{{reminder}}',$icon_dir_url.'reminder.png',$content);
 				break;
 
 		}
@@ -674,7 +677,7 @@ class KwmCore {
 
 	public function add_tagesordnungspunkt_on_form_submission($entry, $form){
 
-		if($form["id"]<>3){
+		if($form["id"]!=1){
 			return;
 		}
 
@@ -842,7 +845,7 @@ class KwmCore {
 		//update the TO post
 		wp_update_post($to_post);
 
-		wp_redirect(home_url().'?p='.$to_post_id);
+		wp_redirect(home_url().'?p='.$to_post_id.'#'.$entry_id);
 
 
 	}
