@@ -846,7 +846,7 @@ class KwmCore {
 		//update the TO post
 		wp_update_post($to_post);
 
-		wp_redirect(home_url().'?p='.$to_post_id.'#'.$entry_id);
+		wp_redirect(home_url().'?p='.$to_post_id.'#top-'.$entry_id);
 
 
 	}

@@ -77,11 +77,18 @@
     border-bottom: 1px  solid #999999;
     padding-bottom:10px;
 }
+
 .openspace-group .wp-block-group p{
-    line-height: 1em;
     margin: 0 auto;
     padding: 0;
 }
+.kwmtop li, .openspace-group .wp-block-group li{
+    line-height: 1.1em;
+}
+.kwmtop p,.openspace-group .wp-block-group p {
+    line-height: 1.2em;
+}
+
 .openspace-group .wp-block-group p:first-child {
     text-align: right;
     font-size: x-small;
