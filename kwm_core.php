@@ -385,8 +385,10 @@ class KwmCore {
 			.kwmtop .wp-block{margin: 0!important;}
 			.kwmtop figcaption{display: none;}
 			.kwmtop figure{float:right;width:50%;}
-			.kwmtop h2:before { content: attr(data-before);}
 			.block-editor-block-list__layout h2:before { content: attr(data-before);}
+			.block-editor-block-list__layout h3:before { content: attr(data-before);}
+			.block-editor-block-list__layout h3{font-size: 1.3em!important;margin-left: 30px!important;}
+			.kwmtop h2:before { content: attr(data-before);}
 			.kwmtop h3:before { content: attr(data-before);}
 			.kwmtop h4:before { content: attr(data-before);}
 
@@ -413,6 +415,10 @@ class KwmCore {
 			.kwmtop.kommunikationsorganisation:before {
 			    content: "Öffentlichkeitsarbeit";
 			    background: #e83781;
+			}
+			.kwmtop.published:before {
+			    content: "Veröffentlichungen";
+			    background: #ac3781;
 			}
 			.kwmtop.berichte:before {
 			    content: "Projekte, Vorhaben und Berichte";

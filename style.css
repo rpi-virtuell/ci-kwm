@@ -6,6 +6,7 @@
 .kwmtop h4 {font-size: 1.0em!important; }
 .kwmtop h2:before { content: attr(data-before);}
 .entry-content h2:before { content: attr(data-before);}
+.entry-content h3:before { content: attr(data-before);}
 .kwmtop h3:before { content: attr(data-before);}
 .kwmtop h4:before { content: attr(data-before);}
 .kwmtop p {padding-top: 0; margin-top: 0;}
@@ -16,6 +17,12 @@
 .kwmtop figure{float:right;width: 50%;}
 .kwmtop figcaption{display: none!important;}
 .kwmtop .align-right{float:right;}
+
+article.category-protokoll h3,
+article.category-tagesordnung h3{
+    font-size: 1.1em!important;
+    margin-left: 30px;
+}
 
 .block-editor-block-list__block.trenner::before {
 
