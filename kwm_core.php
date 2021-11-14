@@ -56,6 +56,8 @@ class KwmCore {
 			return $field;
 		});
 
+        add_shortcode('kwm_anmelden', array($this,'shortcode_anmelden_link'));
+
 		$this->add_custom_fields();
 	}
 
@@ -1232,6 +1234,19 @@ class KwmCore {
 		}
 		return false;
 	}
+
+	/**
+     * shortcode [kwm_anmelden]
+     *
+	 * @param $atts
+	 *
+	 * @return string
+	 */
+    function shortcode_anmelden_link($atts){
+
+	    return '<a href="'.home_url().'/wp-login.php?redirect_to='.urlencode($_SERVER['REQUEST_URI']).'">anmelden</a>';
+
+    }
 }
 
 new KwmCore();
