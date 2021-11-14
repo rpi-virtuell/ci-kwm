@@ -6,7 +6,7 @@
 .kwmtop h4 {font-size: 1.0em!important; }
 .kwmtop h2:before { content: attr(data-before);}
 .entry-content h2:before { content: attr(data-before);}
-.entry-content h3:before { content: attr(data-before);}
+.entry-content > h3:before { content: attr(data-before);}
 .kwmtop h3:before { content: attr(data-before);}
 .kwmtop h4:before { content: attr(data-before);}
 .kwmtop p {padding-top: 0; margin-top: 0;}

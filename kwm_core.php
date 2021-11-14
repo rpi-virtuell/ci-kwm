@@ -33,6 +33,7 @@ class KwmCore {
 
 		add_filter( 'gform_rich_text_editor_buttons', array( $this,'formular_editor_toolbar'), 10, 2 );
 		add_action( 'gform_after_submission', array($this, 'add_tagesordnungspunkt_on_form_submission' ), 10, 2 );
+		add_action( 'current_screen',array($this,'add_tagesordnungspunkt_from_backup'));
 
 		add_filter( 'default_content', array( $this,'tagesordnung_template'), 10, 2 );
 		add_filter( 'default_title', array( $this,'tagesordnung_title'), 10, 2 );
@@ -372,6 +373,7 @@ class KwmCore {
 	}
 
 	public function editor_style(){
+
 		echo '<style id="lazy_blocks_handle">
 			.lazyblock .lzb-content-title {display: none;}
 			
@@ -387,11 +389,19 @@ class KwmCore {
 			.kwmtop figure{float:right;width:50%;}
 			.block-editor-block-list__layout h2:before { content: attr(data-before);}
 			.block-editor-block-list__layout h3:before { content: attr(data-before);}
-			.block-editor-block-list__layout h3{font-size: 1.3em!important;margin-left: 30px!important;}
+			.openspace-session h3:before { content:"";}
+			.openspace-session h3 {margin-left: 0px!important;};
 			.kwmtop h2:before { content: attr(data-before);}
 			.kwmtop h3:before { content: attr(data-before);}
 			.kwmtop h4:before { content: attr(data-before);}
 
+            body .editor-styles-wrapper h3{ 
+                font-size: 1.3em!important;margin-left: 30px!important;
+            }
+            body .editor-styles-wrapper .openspace-session h3 {
+                margin-left: 0px!important;
+            }
+            
 			.openspace-session:before,.openspace-group .wp-block-group:before,.kwmtop:before {
 			    content: "";
 			    position: absolute;
@@ -520,7 +530,7 @@ class KwmCore {
 
 	public function editor_init(){
 
-        /*global $post;
+		/*global $post;
 		$this->add_session_to_openspace_columns($post->ID);*/
 
 	}
@@ -680,11 +690,67 @@ class KwmCore {
 
     }
 
+    public function get_section_label($section){
 
+        $sections = [
+		    'allgemein'=>'Allgemeine Informationen',
+		    'kommunikationsorganisation'=>'Öffentlichkeitsarbeit',
+		    'published'=>'Veröffentlichungen',
+		    'berichte'=>'Berichte',
+		    'organisationsentwicklung'=>'Organisationsentwicklung',
+		    'openspace'=>'Open Space',
+		    'anderes'=>'Verschiedenes',
+		    'teambuilding'=>'Spaß, Spiel, Action'
+	    ];
+
+        if(isset($sections[$section])){
+            return $sections[$section];
+        }else{
+            return false;
+        }
+
+    }
+
+    public function add_tagesordnungspunkt_from_backup(){
+	    $current_screen = get_current_screen();
+
+        if($current_screen->is_block_editor){
+
+
+
+	        $the_slug = 'backup_tops';
+	        $args = array(
+		        'name'        => $the_slug,
+		        'post_type'   => 'post',
+		        'post_status' => array('publish','draft','private','trash'),
+		        'numberposts' => 1
+	        );
+
+	        $backup_tops_query = get_posts($args);
+	        if($backup_tops_query) {
+
+		        $backup_tops = $backup_tops_query[0];
+
+		        if(isset($_GET['post']) && isset($_GET['action']) && $_GET['action'] == 'edit'){
+                    $post_id = intval($_GET['post']);
+                    $post = get_post($post_id);
+			        $post->post_content   .= $backup_tops->post_content;
+
+			        wp_update_post( $post );
+			        //$backup_tops->post_content = '';
+			        //wp_update_post($backup_tops);
+			        wp_delete_post( $backup_tops->ID, true );
+		        }
+
+
+	        }
+        }
+
+    }
 
 	public function add_tagesordnungspunkt_on_form_submission($entry, $form){
 
-		if($form["id"]!=1){
+		if($form["title"]!="Ich möchte folgenden TOP vorschlagen:"){
 			return;
 		}
 
@@ -709,8 +775,13 @@ class KwmCore {
 		$responsible                = rgar($entry,'13');
 		$files                     = json_decode(rgar($entry,'9'));
 
-		$to_post = get_post($to_post_id);
 
+
+        $to_post = get_post($to_post_id);
+
+		if($section == 'published'){
+			$toptype=array('info'=>'info');
+		}
 		if($section == 'teambuilding'){
 			$toptype=array('team'=>'fun');
             $is_teambuilding = true;
@@ -722,7 +793,8 @@ class KwmCore {
 		if($is_teambuilding) {
 			$content .= ' mit: '.$responsible;
 		}
-		$content = wpautop( $content, true);
+
+        $content = wpautop( $content, true);
 		//$content = '<!-- wp:freeform -->'.$content.'<!--/wp:freeform -->';
 		$content = $this->parse_html($content);
 
@@ -739,12 +811,10 @@ class KwmCore {
             //replace placeholders
 			$template = str_replace('{{title}}',$title.' ('.$time.' Min.)',$template);
 			$template = str_replace('{{content}}',$content,$template);
-			//$template = str_replace('{{time}}',$time,$template);
-			//$template = str_replace('{{responsible}}',$responsible,$template);
 			$template = str_replace('{{icon}}',$icon,$template);
 
 			//append TOP Block to the Content (TO)
-			$to_post->post_content .= $template;
+			$content = $to_post->post_content . $template;
 
 
 
@@ -759,62 +829,11 @@ class KwmCore {
 			$template = str_replace('{{responsible}}',$responsible,$template);
 			$template = str_replace('{{hash}}',wp_generate_password(12,false),$template);
 
-			$to_post->post_content = $this->add_session_to_openspace_columns($to_post,$template);
+			$content = $this->add_session_to_openspace_columns($to_post,$template);
 
 
 
-        }elseif($is_openspace && false){
-
-
-			$phase1_pattern = '#<!-- wp:column \{"className":"openspace-group-phase1"\} -->(.*)<!-- \/wp:column -->\W*<!-- wp:column {"className":"openspace-group-phase2"} -->#Us';
-			$phase2_pattern = '#<!-- wp:column \{"className":"openspace-group-phase2"\} -->(.*)<!-- \/wp:column -->\W*<\/div>\W*<!-- \/wp:columns --><\/div>\W*<!-- \/wp:group -->#Us';
-
-			$phase1count = $phase2count = 0;
-			$phase_1 = false;
-			$phase_2 = false;
-
-			preg_match_all($phase1_pattern,$to_post->post_content,$matches);
-			if($matches && isset($matches[1][0])){
-				$phase1count = preg_match_all('#<!-- wp:group#Us',$matches[1][0]);
-				$phase_1 = true;
-			}
-
-			preg_match_all($phase2_pattern,$to_post->post_content,$matches);
-			if($matches && isset($matches[1][0])){
-				$phase2count = preg_match_all('#<!-- wp:group#Us',$matches[1][0]);
-				$phase_2 = true;
-			}
-
-			$template = file_get_contents(dirname(__FILE__).'/session.html');
-
-            $this->add_attachments($content,$files,$nachgereicht);
-
-			//replace placeholders
-			$template = str_replace('{{id}}',$entry_id,$template);
-			$template = str_replace('{{title}}',$title,$template);
-			$template = str_replace('{{content}}',$content,$template);
-			$template = str_replace('{{responsible}}',$responsible,$template);
-			$template = str_replace('{{hash}}',wp_generate_password(12,false),$template);
-
-			if($phase_1 && $phase_2){
-				$phase = ($phase1count > $phase2count)?'phase2':'phase1';
-			}elseif ($phase_1){
-				$phase= 'phase1';
-			}elseif ($phase_2){
-				$phase= 'phase2';
-			}else{
-				$phase = false;
-			}
-
-			if($phase !== false){
-				$search_pattern = '#(<!-- wp:paragraph {"className":"openspace-'.$phase.'"} -->.*<!-- \/wp:paragraph -->)#sU';
-			}else{
-				$search_pattern = '#(<!-- wp:group {"className":"openspace-group"} -->.*<!-- wp:column {"className":"openspace-group-phase\d"} -->\W*<div class="wp-block-column openspace-group-phase\d">[^<]*)#sU';
-			}
-			$replace = '$1'.$template;
-			$to_post->post_content = preg_replace($search_pattern,$replace,$to_post->post_content);
-
-		}else{
+        }else{
 
 			//generate image blocks with $toptype icons
 			$icon_pattern ='<!-- wp:image {"id":1,"sizeSlug":"full","linkDestination":"none","style":{"color":{}}} -->
@@ -842,20 +861,124 @@ class KwmCore {
 			$template = str_replace('{{responsible}}',$responsible,$template);
 			$template = str_replace('{{icon}}',$icon,$template);
 
-			//append TOP Block to the Content (TO)
-			$to_post->post_content .= $template;
+			//append template Block to the selected main TOP
+			$content = $this->append_heading($section,$template,$to_post);
+
+
+			//$to_post->post_content .= $template;
 
 		}
 
 
 
 		//update the TO post
-		wp_update_post($to_post);
+		$lock = get_post_meta( $to_post->ID, '_edit_lock', true );
+		$lock = explode( ':', $lock );
+		if(time()-150 > $lock[0]){
+			$lock = false;
+		}
+
+		if ( ! $lock ) {
+
+            $to_post->post_content = $content;
+	        wp_update_post($to_post);
+
+        }else{
+			$user = isset( $lock[1] ) ? $lock[1] : get_post_meta( $to_post->ID, '_edit_last', true );
+            //save in backup_tops 'TOPS
+            //
+	        $the_slug = 'backup_tops';
+	        $args = array(
+		        'name'        => $the_slug,
+		        'post_type'   => 'any',
+		        'post_status' => array('publish','draft','private'),
+		        'numberposts' => 1
+	        );
+	        $backup_tops_query = get_posts($args);
+            if($backup_tops_query){
+	            $backup_tops = $backup_tops_query[0];
+	            $backup_tops->post_content .= $template;
+	            $backup_tops->post_type = 'post';
+	            wp_update_post($backup_tops);
+	            $to_post_id = $backup_tops->ID;
+            }else{
+	            $backup_tops = array(
+		            'name'          => $the_slug,
+                    'post_title'    => 'Noch nicht eingefügte TOPs',
+                    'post_name'    =>  $the_slug,
+                    'post_type'     => 'post',
+		            'post_status'   => 'publish',
+		            'post_author'   => $user,
+                    'post_content'  => $template
+                );
+	            $to_post_id = wp_insert_post($backup_tops);
+            }
+
+
+        }
 
 		wp_redirect(home_url().'?p='.$to_post_id.'#top-'.$entry_id);
 
 
+
+
+
+
+
 	}
+    private function append_heading($section,$template,$post){
+        if($label = $this->get_section_label($section)){
+
+
+
+	        $startcount = 0;$insertAt=0;
+            $blocks = parse_blocks($post->post_content);
+            foreach ($blocks as $i => $block){
+
+
+	            if($startcount >0 ){
+		            $insertAt = $startcount;
+		            $startcount ++;
+		        }
+
+	            if( ($block["blockName"] == 'core/heading' && (!$block['attrs']["level"])) ||  (isset( $block['attrs']['className'] )&& $block['attrs']['className']=='openspace-group')){
+
+		            //var_dump($insertAt,$label,strip_tags(trim($block['innerHTML'])));
+
+
+		            if(strip_tags(trim($block['innerHTML']))  == $label){
+	                    $startcount = $i;
+	                    $insertAt = $startcount;
+                    }else{
+	                    $startcount =0;
+                    }
+                }
+
+            }
+
+	        if($insertAt>0){
+	            $new_content=[];
+	            $add_block = parse_blocks($template)[0];
+	            foreach ($blocks as $i => $block){
+
+                    $new_content[] =  $block;
+
+                    if( $i== $insertAt){
+
+	                    $new_content[] =  $add_block;
+		            }
+	            }
+	            $content = '';
+	            foreach ($new_content as $block){
+		            $content .= serialize_block($block);
+	            }
+                return $content;
+            }
+	        $content = $post->post_content . $template;
+
+        }
+        return $content;
+    }
 
 	private function add_attachments(&$content,$files,$nachgereicht){
 		//generate links to uploaded files
