@@ -51,6 +51,10 @@ class KwmCore {
 		add_action("wp_ajax_get_session_votes" , array( $this, "get_session_votes"));
 		add_action("wp_ajax_nopriv_get_session_votes" , array( $this, "get_session_votes"));
 
+
+		/**
+		 * Setzt das Datum der KWM bei einem neuen Beitrag fest
+		 */
 		add_filter('acf/load_field/name=kwm_datum', function($field) {
 			$field['default_value'] = $_GET['tag1'];
 			return $field;
@@ -61,6 +65,10 @@ class KwmCore {
 		$this->add_custom_fields();
 	}
 
+	/**
+     * ajax
+	 * Zählt die Personen auf, die bei einer Openspace Session auf das + geklickt haben
+	 */
 	function get_session_votes(){
 
 		$post_id =   json_encode($_POST['post_id']);
@@ -92,6 +100,11 @@ class KwmCore {
         echo json_encode($output);
         die();
 	}
+
+	/**
+	 * ajax
+     * trägt user, die auf das + in einer Session geklickt haben, in die post_meta unter kwm_session_voting
+	 */
 	function vote_for_session(){
 
         $session_id  = json_encode($_POST['session_id']);
@@ -145,6 +158,11 @@ class KwmCore {
 
 		wp_die();
 	}
+
+	/**
+	 * erstellt in jeder open space session eine Toolbar mit den Buttons um sich selbst zu einer
+     * Session einzutragen/auszutragen oder das Etherpad zu benutzen
+     */
 	function voting_script() {
 
         if(!$this->is_tagesordnung()){
@@ -240,6 +258,10 @@ class KwmCore {
 		<?php
 	}
 
+	/**
+	 * Erzeugt einen Button oberhalb des Contents und Verlinkt diesem mit der Seite /beitrag-zur-kwm/,
+     * die das Gravity Form Formular "Ich möchte folgenden TOP vorschlagen:" enthalten muss-
+	 */
 	public function add_tagesordnungspunkt_button(){
 
 		global $post;
@@ -260,6 +282,9 @@ class KwmCore {
 
 	}
 
+	/**
+	 * Erzeugt einen Button unterhalb des Contents, der am Tag, an dem die Konferenz beginnt frei geschaltet wird
+	 */
     public function protokoll_button(){
 
 		global $post;
@@ -287,6 +312,11 @@ class KwmCore {
 
 	}
 
+	/**
+     * Funktion wird ausgelöst, wenn ein Beitrag mit der Category Protokoll gelöscht wird
+     * In der Dazugehörigen tagesordnung wird der postmeta Eintrag  protokoll_id gelöscht
+	 * @param int $postid
+	 */
     function delete_protokoll(int $postid){
         $args = array(
 			'post_type'  => 'post',
@@ -306,6 +336,14 @@ class KwmCore {
 
 	}
 
+	/**
+     * Default title, wenn ein neuer Beitrag erzeugt wird
+     *
+	 * @param $title
+	 * @param $post
+	 *
+	 * @return mixed|string
+	 */
 	public function tagesordnung_title($title, $post){
 		switch( $post->post_type ) {
             case 'post':
@@ -326,6 +364,15 @@ class KwmCore {
 		return $title;
 	}
 
+	/**
+     * Default Content, wenn ein neuer Beitrag erzeugt wird. Der Content wird aus der datei to-template.html erzeugt
+     * und anschließend die Entsprechenden Platzhalter durch die Formulareingaben ersetzn
+     *
+	 * @param $content
+	 * @param $post
+	 *
+	 * @return array|mixed|string|string[]
+	 */
     public function tagesordnung_template($content, $post){
 		switch( $post->post_type ) {
 			case 'post':
@@ -369,11 +416,18 @@ class KwmCore {
 		return $content;
 	}
 
+	/**
+     * manipuliert die Toolbar des Tiny-MCE Editors in einem Gravity Form
+	 * @return string[]
+	 */
 	public function formular_editor_toolbar(){
 		$mce_buttons= array( 'bold', 'italic', 'bullist', 'numlist','link', 'unlink' );
 		return $mce_buttons;
 	}
 
+	/**
+	 * Styles die im Blockeditor verwendet werden sollen
+	 */
 	public function editor_style(){
 
 		echo '<style id="lazy_blocks_handle">
@@ -519,6 +573,9 @@ class KwmCore {
 		echo '</style>';
 	}
 
+	/**
+	 * Scripts und Stylesheets im Header / Footer einbinden
+	 */
     public function enqueue(){
 		wp_enqueue_style( 'kwmtop-style', plugin_dir_url(__FILE__).'style.css' );
 		wp_enqueue_style( 'old-kwm-styles', plugin_dir_url(__FILE__).'old_styles.css' );
@@ -530,13 +587,15 @@ class KwmCore {
 		wp_enqueue_style('dashicons');
 	}
 
-	public function editor_init(){
+	/**
+	 * unknown
+	 */
+	public function editor_init(){}
 
-		/*global $post;
-		$this->add_session_to_openspace_columns($post->ID);*/
-
-	}
-
+	/**
+	 * Kopiert den Inhalt einer Tagesordnung außer Pausen und Teambuilding Phasen und Dateumsangaben in einen neune Beitrag
+     * und setzt die Kategorie auf Protokoll
+	 */
     public function create_protokoll_from_tagesordnung(){
 	    if(isset($_GET['protokoll'])){
 
@@ -613,7 +672,15 @@ class KwmCore {
 	    }
     }
 
-    public function add_session_to_openspace_columns($post,$template='default'){
+	/**
+     * Manipuliert den content einer Tagesordnung und setzt einen neunen Session Block (temmplate) in eine der OpenSpace Spalten
+     *
+	 * @param WP_Post $post
+	 * @param $template string (serialize_block)
+	 *
+	 * @return string
+	 */
+    public function add_session_to_openspace_columns(WP_Post $post,$template){
 
         function find_openspace_columns( $blocks ){
 	        $list = array();
@@ -692,6 +759,13 @@ class KwmCore {
 
     }
 
+	/**
+     * maped die Optionen des Formulars "unter gehört zu:" mit den Überschriften in der Tagesordnung
+     *
+	 * @param $section
+	 *
+	 * @return false|string
+	 */
     public function get_section_label($section){
 
         $sections = [
@@ -713,6 +787,12 @@ class KwmCore {
 
     }
 
+	/**
+	 * wenn TOPs während über Formular erstellt wurden, während die Tagesordnung gerade bearbeitet wird, landen diese
+     * in dem Beitrag mit dem Slug backup_tops
+     * diese Funktion prüft beim jedem Aufruf des Blockeditors, ob Inhalte in backup_tops sind und kopiert diese ggf.
+     * in die aktuelle Tagesordnung
+	 */
     public function add_tagesordnungspunkt_from_backup(){
 	    $current_screen = get_current_screen();
 
@@ -750,6 +830,14 @@ class KwmCore {
 
     }
 
+	/**
+     * nach dem das Gravity Formular "Ich möchte folgenden TOP vorschlagen:" abgeschickt wurde
+     * werden über dies Funktion die Daten weiterverabriet und in eine Template geschrieben,
+     * das anschließend in die verbunden Tagesordnung als Block eingefügt wird.
+     *
+	 * @param $entry
+	 * @param $form
+	 */
 	public function add_tagesordnungspunkt_on_form_submission($entry, $form){
 
 		if($form["title"]!="Ich möchte folgenden TOP vorschlagen:"){
@@ -921,13 +1009,18 @@ class KwmCore {
 
 		wp_redirect(home_url().'?p='.$to_post_id.'#top-'.$entry_id);
 
-
-
-
-
-
-
 	}
+
+	/**
+     * Fügt eine Block mit einem neuen TOP ($template) unterhalb einer bestimten Überschrift ($section)
+     * in der aktuellen Tagesordnung($post) ein
+     *
+	 * @param $section
+	 * @param $template
+	 * @param $post
+	 *
+	 * @return string
+	 */
     private function append_heading($section,$template,$post){
         if($label = $this->get_section_label($section)){
 
@@ -982,6 +1075,13 @@ class KwmCore {
         return $content;
     }
 
+	/**
+     * Erezugt eine Liste zu hochgeladenen Dateien am Ende der Kursberschreibung ($content) eines TOPs
+     *
+	 * @param $content
+	 * @param $files
+	 * @param $nachgereicht
+	 */
 	private function add_attachments(&$content,$files,$nachgereicht){
 		//generate links to uploaded files
 		$attch =array();
@@ -1042,6 +1142,13 @@ class KwmCore {
 		}
 	}
 
+	/**
+     * Hilfsfunktion, die HTML aus dem Tiy-MCE Editor eines Formulares in Gutenberg Blöcke umwandelt
+     *
+	 * @param $content
+	 *
+	 * @return string
+	 */
 	public function parse_html($content){
 
 		$updated_post_content ='';
@@ -1095,31 +1202,23 @@ class KwmCore {
 
 	}
 
-	function modify($content){
-
-		$content = get_the_content();
-
-		$blocks = parse_blocks($content);
-
-		foreach ($blocks as $i=>$block){
-
-			if($block['blockName']=='kadence/tabs'){
-
-				//add block
-
-				break;
-			}
-		}
-
-		return $this->render_content_block($content);
-
-	}
-
+	/**
+     * Hilfsfunktion, die ein Block in HTML für die Frontendausgabe umwandelt
+	 *
+	 * @param $block
+	 *
+	 * @return mixed|void
+	 */
 	public function render_content_block($block){
 		return apply_filters( 'the_content', render_block( $block ) );
 	}
 
-	function get_default_category()
+	/**
+     * Setzt in einem neuen Beitrag auf der Basis einen url parameteres (psot_cat) eine Kategorie als vorausgewählt
+     *
+	 * @return array|false
+	 */
+    function get_default_category()
 	{
 		if ( ! isset( $_GET['post_cat'] ) )
 			return FALSE;
@@ -1203,6 +1302,13 @@ class KwmCore {
 	    endif;
     }
 
+	/**
+     * Stellt fest ob der Beitrag eine Tagesordnung ist
+	 * @param null $post
+	 * @param false $AndProtokoll
+	 *
+	 * @return bool
+	 */
     function is_tagesordnung($post = null,$AndProtokoll = false){
         if($post !== null){
             $post  = is_int($post)? get_post($post) : $post;
@@ -1220,6 +1326,13 @@ class KwmCore {
         return false;
     }
 
+	/**
+     * Stellt fest ob der Beitrag ein Protokoll ist
+     *
+	 * @param null $post
+	 *
+	 * @return bool
+	 */
 	function is_protokoll($post = null){
 		if($post !== null){
 			$post  = is_int($post)? get_post($post) : $post;
