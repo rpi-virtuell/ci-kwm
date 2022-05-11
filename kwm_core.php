@@ -271,8 +271,8 @@ class KwmCore {
             if(get_post_meta($post->ID,'kwm_datum', true)> date('Ymd',strtotime('tomorrow'))){
 	            ?>
                 <!-- wp:buttons {"contentJustification":"right"} -->
-                <div class="wp-block-buttons is-content-justification-right"><!-- wp:button {"className":"add-top-btn"} -->
-                    <div class="wp-block-button add-top-btn"><a class="wp-block-button__link" href="<?php echo home_url();?>/beitrag-zur-kwm/?post_id=<?php echo $post->ID;?>">+ Top</a></div>
+                <div class="wp-block-buttons is-content-justification-right add-top-flex"><!-- wp:button {"className":"add-top-btn"} -->
+                    <div title="Tagesordungspunkt vorschlagen" class="wp-block-button add-top-btn"><a class="wp-block-button__link" href="<?php echo home_url();?>/beitrag-zur-kwm/?post_id=<?php echo $post->ID;?>">+ Top</a></div>
                     <!-- /wp:button --></div>
                 <!-- /wp:buttons -->
 	            <?php
@@ -301,7 +301,7 @@ class KwmCore {
             if(get_post_meta($post->ID,'kwm_datum', true)<= date('Ymd',strtotime('today'))){
 				?>
                 <!-- wp:buttons {"contentJustification":"right"} -->
-                <div class="wp-block-buttons is-content-justification-right"><!-- wp:button {"className":"add-top-btn"} -->
+                <div class="wp-block-buttons is-content-justification-right add-protokoll-flex"><!-- wp:button {"className":"add-top-btn"} -->
                     <div class="wp-block-button"><a class="wp-block-button__link" href="<?php echo home_url();?>/?protokoll=<?php echo $post->ID;?>">Protokoll</a></div>
                     <!-- /wp:button --></div>
                 <!-- /wp:buttons -->

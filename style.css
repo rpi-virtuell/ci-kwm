@@ -71,7 +71,6 @@ article.category-tagesordnung h3{
 }
 .openspace-group {
     background-color: #fff;
-    D
 }
 
 .openspace-group .wp-block-group{
@@ -175,4 +174,8 @@ article.category-tagesordnung h3{
 }
 .add-top-btn a:hover {
     background-color: blueviolet !important;
+}
+.add-top-flex,.add-protokoll-flex {
+    display: flex;
+    margin-bottom: 10px;
 }
