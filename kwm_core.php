@@ -268,6 +268,8 @@ class KwmCore {
 
 		if($post->post_type == 'post' && has_category('tagesordnung',$post)){
 
+            $datetime = new DateTime('tomorrow');
+
             if(get_post_meta($post->ID,'kwm_datum', true)> date('Ymd',strtotime('tomorrow'))){
 	            ?>
                 <!-- wp:buttons {"contentJustification":"right"} -->
